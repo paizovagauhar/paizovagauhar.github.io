@@ -99,7 +99,7 @@ h1,h2,h3{font-family:var(--serif);margin:0}
 .bin{border:2px solid var(--line);border-radius:18px;padding:14px;min-height:220px;background:var(--bg);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px;align-items:flex-start;color:var(--ink)}
 .bin h3{font-size:1.15em;color:var(--field);width:100%;padding-bottom:6px;border-bottom:2px solid var(--line)}
 .bin.over{border-color:var(--wheat)}
-.bin .chip{border-color:var(--sprout);background:var(--okBg);cursor:default}
+.bin .chip{border-color:var(--sprout);background:var(--okBg);cursor:default;pointer-events:none}
 /* crossword */
 .cwrap{display:grid;grid-template-columns:minmax(0,auto) minmax(260px,1fr);gap:28px;align-items:start}
 .cw-scroll{overflow-x:auto}
@@ -127,7 +127,6 @@ h1,h2,h3{font-family:var(--serif);margin:0}
   <header class="hero"><div class="wrap">
     <p>Менеджмент негіздері, тәжірибелік сабақтар</p>
     <h1>Тақырыпты бекітуге арналған ойындар</h1>
-    <p>Әр сабаққа бір ойын. Ойынды проектор арқылы көрсетіңіз, студенттер топпен жауап береді, ал ұпайды оқытушы жоғарғы жолақтағы батырмалармен қосады. Сұрақтар Есполов пен Сүлейменовтің «Менеджмент» оқу құралы бойынша құрастырылған.</p>
   </div></header>
   <div class="wrap"><div class="hub" id="hub"></div></div>
 </main>
@@ -261,15 +260,15 @@ function buildSort(g){
     const pool=el('div',{class:'pool'}); const end=el('div',{class:'endnote'},'Барлық ұғым дұрыс орналастырылды!');
     const prog=el('p',{class:'muted','aria-live':'polite'},`Орналастырылды: 0 / ${g.data.length}`);
     const bins=el('div',{class:'bins'});
-    const place=(chip,bi,binEl)=>{ if(+chip.dataset.b===bi){chip.classList.remove('sel');binEl.append(chip);chip.disabled=true;sel=null;done++;prog.textContent=`Орналастырылды: ${done} / ${g.data.length}`;if(done===g.data.length)end.classList.add('on')}
+    const place=(chip,bi,binEl)=>{ if(+chip.dataset.b===bi){chip.classList.remove('sel');binEl.append(chip);chip.dataset.placed='1';chip.tabIndex=-1;sel=null;done++;prog.textContent=`Орналастырылды: ${done} / ${g.data.length}`;if(done===g.data.length)end.classList.add('on')}
       else{chip.classList.add('no');setTimeout(()=>chip.classList.remove('no'),450)} };
     g.bins.forEach((name,bi)=>{const bn=el('div',{class:'bin',role:'button',tabindex:'0','aria-label':name+' себеті'},el('h3',{},name));
-      const go=()=>{if(sel)place(sel,bi,bn)}; bn.addEventListener('click',e=>{if(e.target===bn||e.target.tagName==='H3')go()}); bn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
+      const go=()=>{if(sel)place(sel,bi,bn)}; bn.addEventListener('click',go); bn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
       bn.addEventListener('dragover',e=>{e.preventDefault();bn.classList.add('over')}); bn.addEventListener('dragleave',()=>bn.classList.remove('over'));
       bn.addEventListener('drop',e=>{e.preventDefault();bn.classList.remove('over');const c=pool.querySelector(`[data-id="${e.dataTransfer.getData('text')}"]`);if(c)place(c,bi,bn)});
       bins.append(bn)});
     shuffle(g.data.map((d,k)=>[...d,k])).forEach(([t,b,k])=>{const c=el('button',{class:'chip',draggable:'true'},t);c.dataset.b=b;c.dataset.id=k;
-      c.onclick=()=>{if(c.disabled)return;pool.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');sel=c};
+      c.onclick=()=>{if(c.dataset.placed)return;pool.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');sel=c};
       c.addEventListener('dragstart',e=>e.dataTransfer.setData('text',k)); pool.append(c)});
     w.append(el('p',{class:'muted'},'Ұғымды басып, содан кейін себетті басыңыз (немесе ұғымды себетке сүйреңіз).'),pool,prog,bins,end,el('div',{class:'row',style:'margin-top:20px'},el('button',{class:'btn ghost',onclick:sec._start},'Қайта бастау')));
   }; return sec;
